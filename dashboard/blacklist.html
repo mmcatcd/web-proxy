@@ -1,0 +1,61 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>The HTML5 Herald</title>
+  <meta name="description" content="Web Proxy Blacklist">
+  <meta name="author" content="Michael McAndrew">
+
+  <link rel="stylesheet" href="css/styles.css">
+
+</head>
+
+<body>
+  <script src="js/scripts.js"></script>
+  <script>
+    fetch('https://localhost:8888/requests').then((res) => {
+      res.json().then((data) => {
+        data = data.reverse();
+        data.map((request) => {
+          console.log(request);
+          let tableElement = document.createElement("tr");
+
+          let fields = ["timestamp", "host", "method", "contentLength", "proto"];
+
+          fields.map((field) => {
+            let fieldElement = document.createElement("th");
+            fieldElement.appendChild(document.createTextNode(request[field]));
+            tableElement.appendChild(fieldElement);
+          })
+
+          // Append table element to table.
+          let table = document.getElementById("reqs-table")
+          table.appendChild(tableElement);
+        })
+      });
+    });
+  </script>
+  <div class="sidebar">
+    <div>
+      <img src="/dashboard/resources/logo.png" class="logo">
+      <span class="logo-text">Web Proxy</span>
+    </div>
+    <ul class="sidebar-list">
+      <li class="sidebar-list-item">
+        <a href="/dashboard/requests.html" class="sidebar-link">
+          <img src="/dashboard/resources/icon-home.svg">
+          <span class="sidebar-link-text">Home</span>
+        </a>
+      </li>
+      <li class="sidebar-list-item">
+        <a href="/dashboard/blacklist.html" class="sidebar-link">
+          <img src="/dashboard/resources/icon-issuing.svg">
+          <span class="sidebar-link-text">Blocked Sites</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</body>
+</html>

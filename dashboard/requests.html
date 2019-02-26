@@ -1,0 +1,164 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Dashboard</title>
+  <meta name="description" content="Web Proxy Dashboard">
+  <meta name="author" content="Michael McAndrew">
+
+  <link rel="stylesheet" href="css/styles.css">
+
+</head>
+
+<body onload="init()">
+  <script src="js/scripts.js"></script>
+  <script>
+    const init = () => {
+      populateRequests()
+      populateBlacklist()
+    }
+
+    const populateRequests = () => {
+      fetch('https://localhost:8888/requests').then((res) => {
+        res.json().then((data) => {
+          data = data.reverse();
+          data.map((request) => {
+            let tableElement = document.createElement("tr");
+
+            let fields = ["timestamp", "host", "method", "contentLength", "proto"];
+
+            fields.map((field) => {
+              let fieldElement = document.createElement("th");
+              fieldElement.appendChild(document.createTextNode(request[field]));
+              tableElement.appendChild(fieldElement);
+            })
+
+            // Append table element to table.
+            let table = document.getElementById("reqs-table")
+            table.appendChild(tableElement);
+          })
+        });
+      });
+    }
+
+    const addBlacklistItem = (item) => {
+      let tableElement = document.createElement("tr");
+      tableElement.id = item;
+      let nameElement = document.createElement("th");
+      let deleteElement = document.createElement("th");
+
+      nameElement.appendChild(document.createTextNode(item));
+      tableElement.appendChild(nameElement);
+
+      let deleteButton = document.createElement("button");
+      deleteButton.setAttribute("onclick", "removeFromBlacklist(this)");
+      deleteButton.value = item;
+      deleteElement.appendChild(deleteButton);
+      tableElement.appendChild(deleteElement);
+
+      // Append table element to table.
+      let table = document.getElementById("blacklist-table");
+        table.appendChild(tableElement);
+    }
+
+    const removeBlacklistItem = (item) => {
+      const table = document.getElementById("blacklist-table");
+      const element = document.getElementById(item);
+      table.removeChild(element);
+    }
+
+    const populateBlacklist = async () => {
+      data = await getBlacklist();
+      data.map((url) => {
+        addBlacklistItem(url)
+      });
+    }
+
+    const getBlacklist = async () => {
+      const result = await fetch('https://localhost:8888/blacklist');
+      const data = await result.json();
+      return data.blacklist;
+    }
+
+    const postBlacklist = (blacklist) => {
+      fetch('https://localhost:8888/blacklist', {
+        method: 'POST',
+        body: JSON.stringify({blacklist: blacklist}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    const addToBlacklist = async () => {
+      const url = document.getElementById("blacklist-text-bar").value;
+      document.getElementById("blacklist-text-bar").value = "";
+      const blacklist = await getBlacklist();
+      blacklist.push(url);
+
+      postBlacklist(blacklist);
+      addBlacklistItem(url);
+    }
+
+    const removeFromBlacklist = async (item) => {
+      let blacklist = await getBlacklist();
+      blacklist = blacklist.filter(url => url !== item.value);
+
+      postBlacklist(blacklist);
+      removeBlacklistItem(item.value);
+    }
+  </script>
+  <div class="sidebar">
+    <div>
+      <img src="/dashboard/resources/logo.png" class="logo">
+      <span class="logo-text">Web Proxy</span>
+    </div>
+    <ul class="sidebar-list">
+      <li class="sidebar-list-item">
+        <a href="/dashboard/requests.html" class="sidebar-link">
+          <img src="/dashboard/resources/icon-home.svg">
+          <span class="sidebar-link-text">Home</span>
+        </a>
+      </li>
+      <li class="sidebar-list-item">
+        <a href="/dashboard/blacklist.html" class="sidebar-link">
+          <img src="/dashboard/resources/icon-issuing.svg">
+          <span class="sidebar-link-text">Blocked Sites</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="requests-container">
+    <div class="requests-header">
+      <a href="/dashboard/requests.html" class="refresh-button"><img src="/dashboard/resources/refresh.png" width="20"></a>
+      <span class="requests-header-title">Requests</span>
+    </div>
+    <table class="requests-table" id="reqs-table">
+      <tr class="table-title-container">
+        <th class="table-title">Timestamp</th>
+        <th class="table-title">Host</th>
+        <th class="table-title">Method</th>
+        <th class="table-title">Content Length</th>
+        <th class="table-title">Proto</th>
+      </tr>
+    </table>
+  </div>
+  <div class="blacklist-container">
+    <div class="requests-header">
+      <span class="requests-header-title">Blacklist</span>
+    </div>
+    <div class="search-bar-container">
+      <input class="search-bar" id="blacklist-text-bar" type="text" placeholder="Add url..." on>
+      <button id="myBtn" onclick="addToBlacklist()">Add!</button>
+    </div>
+    <table class="requests-table" id="blacklist-table">
+        <tr class="table-title-container">
+          <th class="table-title">Blocked</th>
+          <th></th>
+        </tr>
+      </table>
+  </div>
+</body>
+</html>
